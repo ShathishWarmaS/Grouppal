@@ -1,0 +1,23 @@
+# Vagrantfile
+Vagrant.configure("2") do |config|
+
+  # Define the CentOS 7 VM (dev)
+  config.vm.define "centos7" do |centos|
+    centos.vm.box = "centos/7"
+    centos.vm.network "private_network", ip: "192.168.50.10"
+    centos.vm.hostname = "centos7"
+    # Provisioning: Install Ansible on CentOS 7
+    centos.vm.provision "shell", inline: <<-SHELL
+      yum install -y epel-release
+      yum install -y ansible
+    SHELL
+  end
+
+  # Define the Ubuntu 22.04 VM (prod)
+  config.vm.define "ubuntu" do |ubuntu|
+    ubuntu.vm.box = "ubuntu/jammy64"
+    ubuntu.vm.network "private_network", ip: "192.168.50.11"
+    ubuntu.vm.hostname = "ubuntu"
+  end
+
+end

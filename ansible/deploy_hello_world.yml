@@ -1,0 +1,64 @@
+# ansible/deploy_hello_world.yml
+---
+- name: Deploy Hello World Page to Dev Server
+  hosts: dev
+  become: true
+  tasks:
+    - name: Install Nginx on CentOS (for dev)
+      yum:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Nginx on Ubuntu (for dev)
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Start and Enable Nginx Service
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Create Hello World Index Page on Dev
+      copy:
+        content: "Hello World from {{ inventory_hostname }}!"
+        dest: /usr/share/nginx/html/index.html
+
+- name: Copy Index Page to Prod Server
+  hosts: prod
+  become: true
+  tasks:
+    - name: Install Nginx on CentOS (for prod)
+      yum:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Nginx on Ubuntu (for prod)
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Start and Enable Nginx Service
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Fetch Index Page from Dev Server
+      fetch:
+        src: /usr/share/nginx/html/index.html
+        dest: /tmp/index.html
+        flat: true
+      delegate_to: 192.168.50.10
+
+    - name: Deploy Index Page on Prod Server
+      copy:
+        src: /tmp/index.html
+        dest: /usr/share/nginx/html/index.html
